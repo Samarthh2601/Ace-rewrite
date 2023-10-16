@@ -1,6 +1,8 @@
 import os
 import platform
 from datetime import datetime
+import aiohttp
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -29,9 +31,13 @@ class AceBot(commands.Bot):
         app_commands = self.tree.get_commands() #Gets all the slash commands
         print(f'''Host Platform: {platform.system()}\nBoot Time (UTC): {self._boot_time}\nApp Commands: {", ".join(command.name for command in app_commands)}\nSynced: {"True" if self.sync_status else "False"}''')
     
-    def run(self) -> None:
-        super().run(Info.TOKEN)
-
+    async def launch(self) -> None:
+        async with aiohttp.ClientSession() as http_client:
+            self.http_client = http_client
+            await self.start(Info.TOKEN)
+    
+    def run(self):
+        asyncio.run(self.launch())
 
     async def load_extensions_from(self, folder_path: str = Info.EXTENSIONS_PATH) -> None:
         [await self.load_extension(f"{Info.FORMATTED_EXTENSIONS_PATH}{file[:-3]}") for file in os.listdir(folder_path) if file.endswith(".py") and not file.startswith("_")] #loads all the commands using a list comprehension
